@@ -2,7 +2,7 @@ import jax.numpy as jnp
 
 from jax import jit, config, jacfwd
 from functools import partial, lru_cache
-from functions import Chebyshev
+from utils import Chebyshev
 config.update("jax_enable_x64", True)
 
 def transform_to_interval(F, a, b):
