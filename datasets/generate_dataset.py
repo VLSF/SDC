@@ -4,7 +4,6 @@ from sdc_integrators import Implicit_Euler as Implicit_Euler_cJ
 from misc import utils, Chebyshev
 from jax import config, vmap, random
 from functools import partial
-from functions.utils import get_interpolation_matrix
 
 import jax.numpy as jnp
 
@@ -75,7 +74,7 @@ def recompute_time(T):
 def recompute_on_uniform_grid(sol, time):
     N = sol.shape[1]
     evaluate_at = jnp.linspace(-1, 1, N)
-    W = get_interpolation_matrix(evaluate_at, N)
+    W = Chebyshev.get_interpolation_matrix(evaluate_at, N)
     sol_ = reinterpolate(sol, W)
     time_ = recompute_time(time)
     return sol_, time_

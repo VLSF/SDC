@@ -49,3 +49,14 @@ def integrate(coeff, axis):
     coeff = coeff.at[0].set(-dot_general(w + 0., coeff, (((0,), (0,)), ((), ()))))
     coeff = jnp.moveaxis(coeff, 0, axis)
     return coeff
+
+def get_interpolation_matrix(evaluate_at, m):
+    known_at = grid(m)
+    points = jnp.arange(m, dtype='int64')[::-1]
+    weights = jnp.array(((-1)**points)*jnp.ones(m).at[0].set(1/2).at[-1].set(1/2), dtype='float64')
+    n = len(evaluate_at)
+    W = jnp.dot(jnp.ones((n, 1)), weights.reshape(1, m))/(jnp.dot(evaluate_at.reshape(-1, 1), jnp.ones((1, m))) - jnp.dot(jnp.ones((n, 1)), known_at.reshape(1, m)))
+    mask = jnp.isinf(W)
+    marked_rows = jnp.logical_not(jnp.sum(mask, axis=1)).reshape((-1, 1))
+    W = jnp.nan_to_num(W*marked_rows, nan=1.0)
+    return W
