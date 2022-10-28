@@ -1,8 +1,7 @@
 from integrators import Explicit_Euler, Implicit_Euler
 from sdc_integrators import Explicit_Euler as Explicit_Euler_c
 from sdc_integrators import Implicit_Euler as Implicit_Euler_cJ
-from misc import utils
-from functions import Chebyshev
+from misc import utils, Chebyshev
 from jax import config, vmap, random
 from functools import partial
 from functions.utils import get_interpolation_matrix
