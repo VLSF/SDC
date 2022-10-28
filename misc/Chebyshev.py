@@ -51,7 +51,7 @@ def integrate(coeff, axis):
     return coeff
 
 def get_interpolation_matrix(evaluate_at, m):
-    known_at = grid(m)
+    known_at = Chebyshev_grid(m)
     points = jnp.arange(m, dtype='int64')[::-1]
     weights = jnp.array(((-1)**points)*jnp.ones(m).at[0].set(1/2).at[-1].set(1/2), dtype='float64')
     n = len(evaluate_at)
