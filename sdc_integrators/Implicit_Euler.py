@@ -1,17 +1,18 @@
 import jax.numpy as jnp
 
-from jax import jit, config
+from jax import jit, config, jacfwd
 from functools import partial
 from misc import utils
 from sdc_integrators import deferred_correction as sdc
 config.update("jax_enable_x64", True)
 
 @partial(jit, static_argnums=[2, 5])
-def Euler(u, v, F, h, t, N):
+def Euler(u, v, F, h, t, N, s=1):
     w = u.copy()
-    G = lambda w: w - u - h*F(w, v, t)
+    G = lambda w: w - u - s*h*(F(w + v, t) - F(v, t))
+    dG = jacfwd(G)
     for i in range(N):
-        w = utils.Newton(w, G)
+        w = w - jnp.linalg.inv(dG(w)) @ G(w)
     return w
 
 @partial(jit, static_argnums=[2, 5])
@@ -29,11 +30,11 @@ def AA_deferred_correction(u, F, N_it, N, t0, t1, M):
     return sdc.AA_deferred_correction(u, F, N_it, N, t0, t1, corrector_)
 
 @partial(jit, static_argnums=[2, 3, 6])
-def Euler_J(u, v, F, inv_dF, h, t, N):
+def Euler_J(u, v, F, inv_dF, h, t, N, s=1):
     w = u.copy()
-    G = lambda w: w - u - h*F(w, v, t)
+    G = lambda w: w - u - s*h*(F(w + v, t) - F(v, t))
     for i in range(N):
-        w = utils.Newton_Jc(w, v, G, inv_dF, h, t)
+        w = w - inv_dF(w + v, G(w), t, h, s=s)
     return w
 
 @partial(jit, static_argnums=[2, 3, 6])

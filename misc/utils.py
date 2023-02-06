@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-from jax import jit, config, jacfwd
+from jax import jit, config
 from functools import partial, lru_cache
 from jax.lax import scan
 from misc import Chebyshev
@@ -18,19 +18,6 @@ def residual(u, F, t0, t1):
     v = Chebyshev.coefficients_to_values(v)
     r = jnp.expand_dims(u[:, 0], 1) + v - u - jnp.expand_dims(v[:, 0], 1)
     return r
-
-@partial(jit, static_argnums=1)
-def Newton(u, F):
-    dF = jacfwd(F)
-    return u - jnp.linalg.inv(dF(u)) @ F(u)
-
-@partial(jit, static_argnums=[1, 2])
-def Newton_J(u, F, inv_dF, h, t):
-    return u - inv_dF(u, F(u), t, h)
-
-@partial(jit, static_argnums=[2, 3])
-def Newton_Jc(u, v, F, inv_dF, h, t):
-    return u - inv_dF(u + v, F(u), t, h)
 
 def get_grid_data(N, t0, t1, implicit=0):
     t = Chebyshev.Chebyshev_grid(N)
@@ -54,17 +41,27 @@ def integrator(u0, F, N, t0, t1, integration_step, implicit=0):
     v = jnp.transpose(jnp.vstack([u0, v]), [1, 0])
     return v
 
-@partial(jit, static_argnums=[2, 5, 6])
-def corrector(v, delta, F, t0, t1, integration_step, implicit=0):
-    u = jnp.zeros(v.shape)
-    t = Chebyshev.Chebyshev_grid(v.shape[0])
-    G = transform_to_interval(F, t0, t1)
-    F_ = lambda u, v, t: G(u + v, t) - G(v, t)
+def get_grid_data_corrector(delta, v, t0, t1, implicit=0):
+    t = Chebyshev.Chebyshev_grid(v.shape[1])
     h = (jnp.roll(t, -1) - t)[:-1]
-    delta = (jnp.roll(delta, -1, axis=0) - delta)[:-1]
-    for i in range(1, v.shape[0]):
-        u = u.at[i].set(integration_step(u[i-1] + delta[i-1], v[i-1+implicit], F_, h[i-1], t[i-1+implicit]))
-    return u
+    t = (t1 - t0)*(t + 1) / 2 + t0
+    data = jnp.stack([h, jnp.roll(t, -implicit)[:-1]], 1)
+    data = jnp.hstack([data, (jnp.roll(delta, -1, axis=1) - delta)[:, :-1].T, jnp.roll(v, -implicit, axis=1)[:, :-1].T])
+    return data
+
+@partial(jit, static_argnums=[2, 5, ])
+def corrector(v, delta, F, t0, t1, integration_step, implicit=0):
+    u0 = jnp.zeros((v.shape[0],))
+    grid_data = get_grid_data_corrector(delta, v, t0, t1, implicit=implicit)
+    s = (t1 - t0) / 2
+
+    def integration_step_(u, grid_data):
+        u = integration_step(u + grid_data[2:(2+u.shape[0])], grid_data[(2+u.shape[0]):], F, grid_data[0], grid_data[1], s=s)
+        return u, u
+
+    carry, v = scan(integration_step_, u0, grid_data)
+    v = jnp.transpose(jnp.vstack([u0, v]), [1, 0])
+    return v
 
 def compute_sums(x, y):
     x_s, y_s = jnp.sum(x), jnp.sum(y)
