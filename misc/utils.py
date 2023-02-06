@@ -13,9 +13,9 @@ def transform_to_interval(F, a, b):
 def residual(u, F, t0, t1):
     t = (t1 - t0)*(Chebyshev.Chebyshev_grid(u.shape[1]) + 1) / 2 + t0
     v = F(u, t) * (t1 - t0) / 2
-    v = values_to_coefficients(v)
-    v = integrate(v, 1)[:, :-1]
-    v = coefficients_to_values(v)
+    v = Chebyshev.values_to_coefficients(v)
+    v = Chebyshev.integrate(v, 1)[:, :-1]
+    v = Chebyshev.coefficients_to_values(v)
     r = jnp.expand_dims(u[:, 0], 1) + v - u - jnp.expand_dims(v[:, 0], 1)
     return r
 
