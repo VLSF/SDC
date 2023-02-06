@@ -14,6 +14,7 @@ equations_list = [
 def get_ODE(name, *args):
     ODE_data = {}
     if name == equations_list[0]:
+        # Van der Pol
         args = [0.1, ] if len(args) == 0 else args
         F = lambda u, t, epsilon=args[0]: jnp.stack([u[1], (1 - u[1]*u[0]**2)/epsilon - u[0]], 0)
 
@@ -27,6 +28,7 @@ def get_ODE(name, *args):
         ODE_data = {"F": F, "inv_dF": inv_dF}
 
     if name == equations_list[1]:
+        # exp
         args = [1.0, ] if len(args) == 0 else args
         exact = lambda x, l=args[0]: jnp.exp(l*x)
         F = lambda u, t, l=args[0]: u*l
@@ -34,12 +36,14 @@ def get_ODE(name, *args):
         ODE_data = {"F": F, "inv_dF": inv_dF, "exact": exact}
 
     if name == equations_list[2]:
+        # Logistic
         exact = lambda x: 1 / (1 + jnp.exp(-x))
         F = lambda u, t: u * (1 - u)
         inv_dF = lambda u, u_F, t, h, s=1: u_F / (1 - s*h*(1-2*u))
         ODE_data = {"F": F, "inv_dF": inv_dF, "exact": exact}
 
     if name == equations_list[3]:
+        # Harmonic oscillator
         exact = lambda x: jnp.stack([jnp.cos(2*jnp.pi*x), -2*jnp.pi*jnp.sin(2*jnp.pi*x)], 0)
         A = jnp.array([[0, 1], [-(2*jnp.pi)**2, 0]])
         F = lambda u, t, A=A: A @ u
@@ -47,6 +51,7 @@ def get_ODE(name, *args):
         ODE_data = {"F": F, "inv_dF": inv_dF, "exact": exact}
 
     if name == equations_list[4]:
+        # Prothero–Robinson
         args = [1.0, ] if len(args) == 0 else args
         exact = lambda x: jnp.expand_dims(jnp.sin(x), 0)
         F = lambda u, t, delta=args[0]: jnp.stack([jnp.cos(t) - delta*(u[0] - jnp.sin(t)),], 0)
@@ -54,6 +59,7 @@ def get_ODE(name, *args):
         ODE_data = {"F": F, "inv_dF": inv_dF, "exact": exact}
 
     if name == equations_list[5]:
+        # Lorenz
         args = [10, 8/3, 28] if len(args) < 3 else args
         def F(u, t, sigma=args[0], beta=args[1], rho=args[2]):
             return jnp.stack([sigma*(u[1]-u[0]), u[0]*(rho-u[2])-u[1], u[0]*u[1]-beta*u[2]], 0)
