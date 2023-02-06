@@ -17,7 +17,7 @@ def Euler(u, v, F, h, t, N, s=1):
 
 @partial(jit, static_argnums=[2, 5])
 def corrector(v, delta, F, t0, t1, M):
-    integration_step = lambda u, v, F, h, t, N=M: Euler(u, v, F, h, t, M)
+    integration_step = lambda u, v, F, h, t, N=M, s=1: Euler(u, v, F, h, t, M, s=s)
     return utils.corrector(v, delta, F, t0, t1, integration_step, implicit=1)
 
 @partial(jit, static_argnums=[1, 4])
@@ -39,7 +39,7 @@ def Euler_J(u, v, F, inv_dF, h, t, N, s=1):
 
 @partial(jit, static_argnums=[2, 3, 6])
 def corrector_J(v, delta, F, inv_dF, t0, t1, M):
-    integration_step = lambda u, v, F, h, t, N=M: Euler_J(u, v, F, inv_dF, h, t, N)
+    integration_step = lambda u, v, F, h, t, N=M, s=1: Euler_J(u, v, F, inv_dF, h, t, N, s=s)
     return utils.corrector(v, delta, F, t0, t1, integration_step, implicit=1)
 
 @partial(jit, static_argnums=[1, 2, 5])
