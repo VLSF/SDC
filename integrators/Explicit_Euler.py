@@ -6,8 +6,8 @@ from misc import utils
 config.update("jax_enable_x64", True)
 
 @partial(jit, static_argnums=[1, ])
-def Euler(u, F, h, t):
-    return u + h*F(u, t)
+def Euler(u, F, h, t, s=1):
+    return u + s*h*F(u, t)
 
 @partial(jit, static_argnums=[1, 2])
 def integrator(u0, F, N, t0, t1):

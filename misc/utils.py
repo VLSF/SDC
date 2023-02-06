@@ -2,6 +2,7 @@ import jax.numpy as jnp
 
 from jax import jit, config, jacfwd
 from functools import partial, lru_cache
+from jax.lax import scan
 from misc import Chebyshev
 config.update("jax_enable_x64", True)
 
@@ -30,16 +31,27 @@ def Newton_J(u, F, inv_dF, h, t):
 def Newton_Jc(u, v, F, inv_dF, h, t):
     return u - inv_dF(u + v, F(u), t, h)
 
-@partial(jit, static_argnums=[1, 2, 5, 6])
+def get_grid_data(N, t0, t1, implicit=0):
+    t = Chebyshev.Chebyshev_grid(N)
+    h = (jnp.roll(t, -1) - t)[:-1]
+    t = (t1 - t0)*(t + 1) / 2 + t0
+    data = jnp.stack([h, jnp.roll(t, -implicit)[:-1]], 1)
+    return data
+
+@partial(jit, static_argnums=[1, 2, 5, ])
 def integrator(u0, F, N, t0, t1, integration_step, implicit=0):
     u = jnp.zeros((N, u0.shape[0]))
     u = u.at[0].set(u0)
-    t = Chebyshev.Chebyshev_grid(N)
-    G = transform_to_interval(F, t0, t1)
-    h = (jnp.roll(t, -1) - t)[:-1]
-    for i in range(1, N):
-        u = u.at[i].set(integration_step(u[i-1], G, h[i-1], t[i-1+implicit]))
-    return u
+    grid_data = get_grid_data(N, t0, t1, implicit=implicit)
+    s = (t1 - t0) / 2
+
+    def integration_step_(u, grid_data):
+        u = integration_step(u, F, grid_data[0], grid_data[1], s=s)
+        return u, u
+
+    carry, v = scan(integration_step_, u0, grid_data)
+    v = jnp.transpose(jnp.vstack([u0, v]), [1, 0])
+    return v
 
 @partial(jit, static_argnums=[2, 5, 6])
 def corrector(v, delta, F, t0, t1, integration_step, implicit=0):
