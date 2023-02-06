@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-from jax import jit, config
+from jax import jit, config, jacfwd
 from functools import partial
 from misc import utils
 config.update("jax_enable_x64", True)
