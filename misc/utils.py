@@ -11,11 +11,12 @@ def transform_to_interval(F, a, b):
 
 @partial(jit, static_argnums=1)
 def residual(u, F, t0, t1):
-    G = transform_to_interval(F, t0, t1)
-    v = G(u.T, Chebyshev.Chebyshev_grid(u.shape[0]))
-    v = Chebyshev.values_to_coefficients(v)
-    v = Chebyshev.integrate(v, 0)[:-1, :]
-    r = u[0] + Chebyshev.coefficients_to_values(v) - u
+    t = (t1 - t0)*(Chebyshev.Chebyshev_grid(u.shape[1]) + 1) / 2 + t0
+    v = F(u, t) * (t1 - t0) / 2
+    v = values_to_coefficients(v)
+    v = integrate(v, 1)[:, :-1]
+    v = coefficients_to_values(v)
+    r = jnp.expand_dims(u[:, 0], 1) + v - u - jnp.expand_dims(v[:, 0], 1)
     return r
 
 @partial(jit, static_argnums=1)
