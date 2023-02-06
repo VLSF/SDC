@@ -11,7 +11,7 @@ def RK4(u, F, h, t, s=1):
     b = s*F(u + a*h/2, t + h/2)
     c = s*F(u + b*h/2, t + h/2)
     d = s*F(u + c*h, t + h)
-    u = u + h*(a + 2*b + 2*c + d)/6
+    u = u + s*h*(a + 2*b + 2*c + d)/6
     return u
 
 @partial(jit, static_argnums=[1, 2])
