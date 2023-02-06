@@ -16,7 +16,7 @@ def Euler(u, F, h, t, N, s=1):
 
 @partial(jit, static_argnums=[1, 2, 5])
 def integrator(u0, F, N, t0, t1, M):
-    integration_step = lambda u, F, h, t, N=M: Euler(u, F, h, t, N)
+    integration_step = lambda u, F, h, t, s=1, N=M: Euler(u, F, h, t, N, s=s)
     return utils.integrator(u0, F, N, t0, t1, integration_step, implicit=1)
 
 @partial(jit, static_argnums=[1, 2, 5])
@@ -28,5 +28,5 @@ def Euler_J(u, F, inv_dF, h, t, N, s=1):
 
 @partial(jit, static_argnums=[1, 2, 3, 6])
 def integrator_J(u0, F, inv_dF, N, t0, t1, M):
-    integration_step = lambda u, F, h, t, N=M: Euler_J(u, F, inv_dF, h, t, N)
+    integration_step = lambda u, F, h, t, s=1, N=M: Euler_J(u, F, inv_dF, h, t, N, s=s)
     return utils.integrator(u0, F, N, t0, t1, integration_step, implicit=1)
