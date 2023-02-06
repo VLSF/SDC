@@ -7,7 +7,7 @@ from sdc_integrators import deferred_correction as sdc
 config.update("jax_enable_x64", True)
 
 @partial(jit, static_argnums=[2, ])
-def RK4_corrector(u, v, F, h, t, s=1):
+def RK4(u, v, F, h, t, s=1):
     a = s*(F(u + v, t) - F(v, t))
     b = s*(F(u + v + a*h, t + s*h/2) - F(v + a*h/2, t + s*h/2))
     c = s*(F(u + v + b*h, t + s*h/2) - F(v + b*h/2, t + s*h/2))
