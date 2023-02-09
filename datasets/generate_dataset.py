@@ -72,3 +72,10 @@ def to_uniform_grid(dataset, T):
     T_ = jnp.moveaxis(interpolate(T), 0, -1)
     dataset_ = jnp.moveaxis(interpolate(dataset), 0, -1)
     return dataset_, T_
+
+def get_residual(dataset, ODE_data, T_max, N_intervals):
+    Ts = jnp.linspace(0, T_max, N_intervals+1)
+    trajectory_residual = lambda trajectory: vmap(utils.residual, in_axes=(0, None, 0, 0), out_axes=0)(trajectory, ODE_data["F"], Ts[:-1], Ts[1:])
+    res = vmap(trajectory_residual)(dataset[:, :, -1, :, :])
+    res = jnp.linalg.norm(res.reshape(list(res.shape[:-2]) + [-1,]), axis=-1)
+    return res
