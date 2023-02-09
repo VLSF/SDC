@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from integrators import RK4, Explicit_Euler, Implicit_Euler
 from sdc_integrators import RK4 as RK4_c, Explicit_Euler as Explicit_Euler_c, Implicit_Euler as Implicit_Euler_c
 from misc import utils, Chebyshev
-from jax import config, random
+from jax import config, random, vmap
 from jax.lax import dot_general
 
 config.update("jax_enable_x64", True)
