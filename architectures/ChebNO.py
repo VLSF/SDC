@@ -29,7 +29,7 @@ class ChebNO(eqx.Module):
             for p in self.spectral_processor[i]:
                 x = p(x)
             x = Chebyshev.coefficients_to_values(x)
-            if i != len(self.processor):
+            if i != (len(self.processor) - 1):
                 x = relu(y + x)
         x = self.decoder(x)
         return x
