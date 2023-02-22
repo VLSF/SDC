@@ -11,8 +11,9 @@ class ChebNO(eqx.Module):
     decoder: eqx.Module
     spectral_processor: list
     processor: list
+    N_modes: int
 
-    def __init__(self, N_features, N_layers, kernel_size, N_conv, key):
+    def __init__(self, N_features, N_layers, kernel_size, N_conv, N_modes, key):
         keys = random.split(key, 3)
         self.encoder = eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[0], out_channels=N_features[1], kernel_size=1, key=keys[0])
         self.decoder = eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[1], out_channels=N_features[2], kernel_size=1, key=keys[1])
@@ -20,15 +21,16 @@ class ChebNO(eqx.Module):
         self.spectral_processor = [[eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[1], out_channels=N_features[1], kernel_size=kernel_size, padding=kernel_size//2, key=key) for key in keys_] for keys_ in keys[:-1].reshape(N_layers, N_conv, -1)]
         keys = random.split(keys[-1], N_layers)
         self.processor = [eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[1], out_channels=N_features[1], kernel_size=1, key=key) for key in keys]
+        self.N_modes = N_modes
 
     def __call__(self, x):
         x = self.encoder(x)
         for i in range(len(self.processor)):
             y = self.processor[i](x)
-            x = Chebyshev.values_to_coefficients(x)
+            x = Chebyshev.values_to_coefficients(x)[:, :N_modes]
             for p in self.spectral_processor[i]:
                 x = p(x)
-            x = Chebyshev.coefficients_to_values(x)
+            x = jnp.pad(Chebyshev.coefficients_to_values(x), [(0, 0), (0, y.shape[1] - N_modes)]
             if i != (len(self.processor) - 1):
                 x = relu(y + x)
         x = self.decoder(x)
