@@ -30,7 +30,7 @@ class ChebNO(eqx.Module):
             x = Chebyshev.values_to_coefficients(x)[:, :N_modes]
             for p in self.spectral_processor[i]:
                 x = p(x)
-            x = jnp.pad(Chebyshev.coefficients_to_values(x), [(0, 0), (0, y.shape[1] - N_modes)]
+            x = jnp.pad(Chebyshev.coefficients_to_values(x), [(0, 0), (0, y.shape[1] - N_modes)])
             if i != (len(self.processor) - 1):
                 x = relu(y + x)
         x = self.decoder(x)
