@@ -13,14 +13,14 @@ class ChebNO(eqx.Module):
     processor: list
     N_modes: int
 
-    def __init__(self, N_features, N_layers, kernel_size, N_conv, N_modes, key):
+    def __init__(self, N_features, N_layers, spectral_kernel_size, N_conv, N_modes, key, spatial_kernel_size=1):
         keys = random.split(key, 3)
         self.encoder = eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[0], out_channels=N_features[1], kernel_size=1, key=keys[0])
         self.decoder = eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[1], out_channels=N_features[2], kernel_size=1, key=keys[1])
         keys = random.split(keys[2], N_conv*N_layers+1)
-        self.spectral_processor = [[eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[1], out_channels=N_features[1], kernel_size=kernel_size, padding=kernel_size//2, key=key) for key in keys_] for keys_ in keys[:-1].reshape(N_layers, N_conv, -1)]
+        self.spectral_processor = [[eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[1], out_channels=N_features[1], kernel_size=spectral_kernel_size, padding=spectral_kernel_size//2, key=key) for key in keys_] for keys_ in keys[:-1].reshape(N_layers, N_conv, -1)]
         keys = random.split(keys[-1], N_layers)
-        self.processor = [eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[1], out_channels=N_features[1], kernel_size=1, key=key) for key in keys]
+        self.processor = [eqx.nn.Conv(num_spatial_dims=1, in_channels=N_features[1], out_channels=N_features[1], kernel_size=spatial_kernel_size, padding=spatial_kernel_size//2, key=key) for key in keys]
         self.N_modes = N_modes
 
     def __call__(self, x):
