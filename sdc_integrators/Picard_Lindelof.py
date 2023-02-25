@@ -18,6 +18,6 @@ def Picard_Lindelof(values, F, t0, t1):
     t = Chebyshev.Chebyshev_grid(values.shape[1])
     t = (t1 - t0)*(t + 1) / 2 + t0
     s = (t1 - t0)/2
-    f = vmap(F, in_axes=(1, 0), out_axes=1)((values, t)
+    f = vmap(F, in_axes=(1, 0), out_axes=1)(values, t)
     correction = s * indefinite_integral(f)
     return values[:, :1] + correction
