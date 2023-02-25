@@ -2,14 +2,14 @@ import jax.numpy as jnp
 from jax import config
 config.update("jax_enable_x64", True)
 
-equations_list = [
-    "Van der Pol",
-    "exp",
-    "Logistic",
-    "Harmonic oscillator",
-    "Prothero–Robinson",
-    "Lorenz"
-]
+equations_list = {
+  'Van der Pol': 2,
+  'exp': 1,
+  'Logistic': 1,
+  'Harmonic oscillator': 2,
+  'Prothero–Robinson': 1,
+  'Lorenz': 3
+}
 
 def get_ODE(name, *args):
     ODE_data = {}
